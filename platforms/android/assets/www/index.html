@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+    Copyright (c) 2012-2014 Adobe Systems Incorporated. All rights reserved.
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <link rel="stylesheet" href="vendors/onsenui/css/onsenui.css">
+    <link rel="stylesheet" href="vendors/onsenui/css/onsen-css-components-blue-basic-theme.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    
+    <script src="vendors/onsenui/js/angular/angular.js"></script>
+    <script src="http://cdn.pubnub.com/pubnub.min.js"></script>
+    <script src="http://pubnub.github.io/angular-js/scripts/pubnub-angular.js"></script>
+    <script src="vendors/onsenui/js/onsenui.js"></script>
+
+    <script src="js/app.js"></script>
+    <sript src="cordova.js"></script>
+  </head>
+
+  <body>
+
+    <ons-page ng-controller="pubNubController as pnCtrl">
+      <ons-toolbar>
+        <div class="center">Control Panel</div>
+      </ons-toolbar>
+
+      <ons-row class="profile-wrapper">
+      </ons-row>
+
+        <ons-col>
+            <ons-button ng-click="publish()">Publish</ons-button> 
+        </ons-col>
+
+      <ons-list modifier="inset" class="settings-list">
+
+        <ons-list-item ng-repeat="device in devices">
+          {{device}} {{$index}}
+          <ons-switch modifier="list-item" ng-click="testDevice(device)"></ons-switch>
+        </ons-list-item>
+
+        <ons-list-item>
+          Switch 1
+          <ons-switch modifier="list-item"></ons-switch>
+        </ons-list-item>
+
+        <ons-list-item>
+          Switch 2
+          <ons-switch modifier="list-item" checked></ons-switch>
+        </ons-list-item>
+
+      </ons-list>
+    </ons-page>
+  </body>
+</html>
