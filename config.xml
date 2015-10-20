@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.phonegap.test" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0">
     <name>Switch Click</name>
-    <description>Control all switch click devices from one interface</description>
+    <description>Control all Switch Click devices from one interface</description>
     <author email="support@phonegap.com" href="http://phonegap.com">Manas Sawant</author>
     <content src="index.html" />
     <preference name="permissions" value="none" />

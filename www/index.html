@@ -42,20 +42,20 @@
 
     <ons-page ng-controller="pubNubController as pnCtrl">
       <ons-toolbar>
-        <div class="center">Control Panel</div>
+        <div class="center">Switch Click</div>
       </ons-toolbar>
 
       <ons-row class="profile-wrapper">
       </ons-row>
 
         <ons-col>
-            <ons-button ng-click="publish()">Publish</ons-button> 
+            <ons-button ng-click="requestStateChange()">Set State</ons-button> 
         </ons-col>
 
       <ons-list modifier="inset" class="settings-list">
         <ons-list-item ng-repeat="device in devices">
           {{device}} {{$index}}
-          <ons-switch modifier="list-item" ng-click="testDevice(device)"></ons-switch>
+          <ons-switch modifier="list-item" ng-click="requestStateChange(device)"></ons-switch>
         </ons-list-item>
       </ons-list>
     </ons-page>
