@@ -42,13 +42,7 @@ app.controller('pubNubController', function($rootScope, $scope, PubNub) {
     // Create popover when Onsen UI is loaded.
     ons.ready(function() {
         console.log('ons.ready:');
-        $scope.onsready=true;
-        // PubNub.init({
-        //   publish_key: 'pub-c-eb51f4ff-6f64-48e5-a3d3-b154295d2323',
-        //   subscribe_key: 'sub-c-e65674c4-606a-11e5-b50b-0619f8945a4f',
-        // });
-        $scope.pubnubready = true;
-        console.log('pubnubInit done:');        
+        $scope.onsready=true;       
     });
 
     if (!$rootScope.pubNubInitialized) {
@@ -78,15 +72,17 @@ app.controller('pubNubController', function($rootScope, $scope, PubNub) {
         });
     });
 
-      // Register for presence events (optional)
+    // When Presence event occurs
     $rootScope.$on(PubNub.ngPrsEv($scope.channel), function(ngEvent, payload) {
         console.log('Presence Event recvd');
+        
         $scope.$apply(function() {
+            
         $scope.devices = PubNub.ngListPresence($scope.channel);
         var idxOfOwnUUID = $scope.devices.indexOf($scope.UUID);
         $scope.devices.splice(idxOfOwnUUID, 1);
         console.log(idxOfOwnUUID);
-        console.log('Updated nodelist:', $scope.devices);
+        console.log('Updated node list:', $scope.devices);
         });
     });
 
