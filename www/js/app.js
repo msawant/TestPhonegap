@@ -19,134 +19,217 @@ angular.element(document).ready(function() {
 
 var app = angular.module('myApp', ['onsen', "pubnub.angular.service"]);
 
+app.service("nodeManager", function($rootScope, $q, $interval, $timeout, PubNub) {
+    var nm ={};
+    var nodeDataObserverCallbacks = [];
+    
+    var nodes ={};
+    var deviceIds = [];
+    nm.channel = "my_channel";
+    nm.uuid = 0;
+    nm.isPubNubInitialized = false;
+    nm.pubnub = null;
 
+    nm.init =function(){
+        
+        console.log('No uuid found', PUBNUB.db.get('session'));
 
-app.controller('pubNubInitController', function($scope, PubNub) {
-    $scope.onsrready=false;
-    $scope.pubnubready = false;
+        nm.uuid = PUBNUB.db.get('session') || (function(){ 
+            console.log('No uuid found');
+            var uuid = PUBNUB.uuid(); 
+            PUBNUB.db.set('session', uuid); 
+            return uuid; 
+        })();
 
+        if (nm.isPubNubInitialized==false) {
 
-});
+                console.log('Initialize the PubNub service');
+                  nm.pubnub= PubNub.init({
+                  publish_key: 'pub-c-eb51f4ff-6f64-48e5-a3d3-b154295d2323',
+                  subscribe_key: 'sub-c-e65674c4-606a-11e5-b50b-0619f8945a4f'
+                });
+                nm.isPubNubInitialized = true;
+        };
 
-app.controller('pubNubController', function($rootScope, $scope, PubNub) {
-    $scope.channel = "my_channel";
-    $scope.deviceType = "controller";
-    $scope.devices = [];
-
-    $scope.UUID = PUBNUB.db.get('session') || (function(){ 
-        var uuid = PUBNUB.uuid(); 
-        PUBNUB.db.set('session', uuid); 
-        return uuid; 
-    })();
-
-    // Create popover when Onsen UI is loaded.
-    ons.ready(function() {
-        console.log('ons.ready:');
-        $scope.onsready=true;       
-    });
-
-    if (!$rootScope.pubNubInitialized) {
-        // Initialize the PubNub service
-        PubNub.init({
-          publish_key: 'pub-c-eb51f4ff-6f64-48e5-a3d3-b154295d2323',
-          subscribe_key: 'sub-c-e65674c4-606a-11e5-b50b-0619f8945a4f',
-          uuid: $scope.UUID,
+        console.log('Subscribing to my_channel');
+        PubNub.ngSubscribe({ channel: nm.channel,
+            state: {
+                "deviceType" : "Controller",
+                "status" : "Online"
+            }
         });
-        console.log('Registered with Pubnub Service', $scope);
-        $rootScope.pubNubInitialized = true;
+
+        console.log('Registering Msg Event listener');
+        $rootScope.$on(PubNub.ngMsgEv(nm.channel), function(ngEvent, payload) {
+            //do nothing
+        });
+        
+        // When Presence event occurs
+        $rootScope.$on(PubNub.ngPrsEv(nm.channel), function(ngEvent, payload) {
+            console.log('Device List:', payload);
+        });
+        };
+
+
+    nm.getNodeList = function(){
+        deviceIds = PubNub.ngListPresence(nm.channel);
+        console.log('Getting Node lists', deviceIds.length);
     }
 
-    PubNub.ngSubscribe({ channel: $scope.channel,
-        state: {
-            "deviceType" : "Controller",
-            "status" : "Online"
-        }
-    })
-
-    console.log('Subscribed to channel', $scope);
-    
-      // Register for message events
-    $rootScope.$on(PubNub.ngMsgEv($scope.channel), function(ngEvent, payload) {
-        $scope.$apply(function() {
-        console.log('Msg recvd:', payload.message);
-        });
-    });
-
-    // When Presence event occurs
-    $rootScope.$on(PubNub.ngPrsEv($scope.channel), function(ngEvent, payload) {
-        console.log('Presence Event recvd');
-        
-        $scope.$apply(function() {
+    nm.updateNodes = function(){
+        console.log('Updating nodes:', deviceIds.length);
+        nm.getNodeList();
+        // the array is defined and has at least one element
+        if (typeof deviceIds !== 'undefined' && deviceIds.length > 0) {
+            var idxOfOwnUUID = deviceIds.indexOf(nm.uuid);
+            deviceIds.splice(idxOfOwnUUID, 1);
+            console.log('Total nodes detected:', deviceIds.length);
             
-        $scope.devices = PubNub.ngListPresence($scope.channel);
-        var idxOfOwnUUID = $scope.devices.indexOf($scope.UUID);
-        $scope.devices.splice(idxOfOwnUUID, 1);
-        console.log(idxOfOwnUUID);
-        console.log('Updated node list:', $scope.devices);
-        });
-    });
+            for (var i=0; i<deviceIds.length; i++){
+                $timeout(5);
+                var currentId = deviceIds[i];
+                console.log('currentId:', currentId);
+                nodes[deviceIds[i]]={
+                                'uuid' : deviceIds[i],
+                                deviceType : '',
+                        };
+            };
 
-    //Simple Test function
-    $scope.testDevice = function(device_name) {
-        PubNub.ngPublish({
-            channel: $scope.channel,
-            message: {
-                uniqueId: device_name,
-                requestState: "on"
-            }
-        });
-        console.log(device_name);
+            $rootScope.$broadcast('nodesUpdated');
+    
+        } else {
+            //do nothing
+        }
+
     };
 
-    //Publish a request
-    $scope.publish = function() {
-        console.log('publish', $scope);
-        PubNub.ngPublish({
-            channel: $scope.channel,
-            message: {
-                origin : $scope.UUID,
-                destination: "0000",
-                request : { state: "on"}
-            }
-        });
-        return $scope.newMessage = '';
+    nm.initNodes = function(){
+        //do nothing
     };
 
-    $scope.requestStateChange = function(dest) {
-        console.log('Requesting change', $scope);
-        PubNub.ngPublish({
-            channel: $scope.channel,
-            message: {
-                origin  : $scope.UUID,
-                dest    : dest,
-                request : { state: "on"}
-            }
-        });
-        return $scope.newMessage = '';
-    };
+    nm.getNodes = function(){
+        console.log('Nodes:', nm.nodes);
 
-    $scope.setState = function() {
-        PubNub.ngState({
-            channel  : "my_channel",
-            state    : {
-                        "UUID" : UUID,
-                        "deviceType" : "Controller",
-                        "status" : "Online"
-                        },
-            callback : function(m){console.log("State Change Callback")},
-            error    : function(m){console.log(m)}
-        });
-        console.log("Set Controller Set")
+        return nodes;
     };
+    console.log('Node Manager initialized');
 
-    $scope.filterOwnUUID = function(items) {
-        var testArray = ["2"];
-        var index = $items.indexOf($scope.UUID);
-        console.log(index);
-        return function(items) {
-            return (testArray);
-        };
-    };
+    $interval(nm.updateNodes, 10000);
 
+    nm.init();
+    console.log('Self uuid: ', nm.uuid);
+    
+    return nm;
 });
+
+
+app.controller('pubNubViewController', ['$scope', "nodeManager", function($scope, nodeManager) {
+    $scope.nodes={};
+
+    $scope.$on('nodesUpdated', function() {
+        $scope.nodes = nodeManager.getNodes();
+        console.log('callback received by scope.on', $scope.nodes);
+    });
+    console.log('pubNubViewController intialized');
+}]);
+
+
+app.controller('pubNubDeviceViewController', ["nodeManager", '$scope', 'PubNub',function($rootScope, $scope, nodeManager, PubNub) {
+  // $scope.page = myNavigator.getCurrentPage();
+  $scope.nodeID = myNavigator.getCurrentPage().options.nodeID
+      nodeManager.ngState({
+       channel: "my_channel",
+       // state: true,
+       uuid: $scope.nodeID,
+       callback: function(m){console.log("State Received",JSON.stringify(m))}
+     });
+  console.log('Initializing pubNubDeviceViewController');
+  console.log($scope.nodeID);
+}]);
+
+// app.controller('pubNubController', function($rootScope, $scope, PubNub) {
+//     $scope.channel = "my_channel";
+//     $scope.deviceType = "controller";
+//     $scope.deviceIds = [];
+
+
+
+//     // Create popover when Onsen UI is loaded.
+//     ons.ready(function() {
+//         console.log('ons.ready:');
+//         // $scope.onsready=true;       
+//     });
+
+//     console.log('Subscribed to channel', $scope);
+    
+
+
+//     // When Presence event occurs
+//     $rootScope.$on(PubNub.ngPrsEv($scope.channel), function(ngEvent, payload) {
+//         console.log('Presence Event recvd by pubNubController');
+//         $scope.deviceIds = PubNub.ngListPresence($scope.channel);
+//         var idxOfOwnUUID = $scope.deviceIds.indexOf($scope.UUID);
+//         $scope.deviceIds.splice(idxOfOwnUUID, 1);
+//         console.log('Updated node list:', $scope.deviceIds);
+//     });
+
+//     //Simple Print function
+//     $scope.consolePrint = function(value) {
+//         console.log(value);
+//         console.log($scope.value);
+
+//     };
+
+//     //Publish a request
+//     $scope.publish = function() {
+//         console.log('publish', $scope);
+//         PubNub.ngPublish({
+//             channel: $scope.channel,
+//             message: {
+//                 origin : $scope.UUID,
+//                 destination: "0000",
+//                 request : { state: "on"}
+//             }
+//         });
+//         return $scope.newMessage = '';
+//     };
+
+//     $scope.requestStateChange = function(dest) {
+//         console.log('Requesting change', $scope);
+//         PubNub.ngPublish({
+//             channel: $scope.channel,
+//             message: {
+//                 origin  : $scope.UUID,
+//                 dest    : dest,
+//                 request : { state: "on"}
+//             }
+//         });
+//         return $scope.newMessage = '';
+//     };
+
+//     $scope.setState = function(UUID) {
+//             PubNub.ngState({
+//                 channel  : "my_channel",
+//                 state    : {
+//                             "UUID" : UUID,
+//                             "deviceType" : "Device",
+//                             "status" : "Online"
+//                             },
+//                 callback : function(m){console.log(m)},
+//                 error    : function(m){console.log(m)}
+//             });
+//             console.log("Set Controller Set")
+//         };
+
+//     $scope.getState = function(UUID) {
+//         PubNub.ngState({
+//             channel  : "my_channel",
+//             uuid     : UUID,
+//             callback : function(m){console.log(m)},
+//             error    : function(m){console.log(m)}
+//         });
+//         console.log("Get Controller Set")
+//     };
+
+// });
 

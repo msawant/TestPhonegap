@@ -1,0 +1,26 @@
+<!-- devicePage.html -->
+    <ons-page ng-controller = "pubNubDeviceViewController as pdvCtrl">
+      <ons-toolbar>
+        <div class="left">
+          <ons-back-button >Back</ons-back-button>
+        </div>
+        <div class="center">Device page</div>
+        <div class="center">{{nodeID}}</div>
+      </ons-toolbar>
+       <ons-list >
+        <ons-list-item modifier="chevron" ng-click="myNavigator.popPage('index.html')" class="list-item-container" >
+          <ons-row>
+            <ons-col width="10px">
+              <img src="" class="thumbnail">
+            </ons-col>
+            <ons-col>
+              <div class="name">
+
+                <div class="center">{{nodeID}}</div>
+              </div>
+            </ons-col>
+            <ons-col width="40px"></ons-col>
+          </ons-row>
+        </ons-list-item >
+      </ons-list>
+    </ons-page>

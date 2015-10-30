@@ -1,0 +1,21 @@
+<!-- devicePage.html -->
+    <ons-page >
+      <ons-toolbar>
+        <div class="center">Device page</div>
+      </ons-toolbar>
+       <ons-list ng-controller = "pubNubViewController as pvCtrl">
+        <ons-list-item modifier="chevron" ng-repeat="node in nodes" class="list-item-container" >
+          <ons-row>
+            <ons-col width="10px">
+              <img src="" class="thumbnail">
+            </ons-col>
+            <ons-col>
+              <div class="name">
+                {{node['uuid']}}
+              </div>
+            </ons-col>
+            <ons-col width="40px"></ons-col>
+          </ons-row>
+        </ons-list-item onclick="myNavigator.pushPage('index.html', { animation : 'slide' } )">
+      </ons-list>
+    </ons-page>
